@@ -1,0 +1,145 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* §21 Editorial Obsidian — dark premium base, amber accent, light-as-electric. */
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  background: #0a0b0d;
+  color: #f5f6f7;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* §21.3(4): a faint film-grain across the app kills the flat-digital feel.
+   Fixed overlay, non-interactive, ~3% opacity. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Thin, refined scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.14) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3
+           text-[15px] font-semibold tracking-tight transition-all duration-200
+           active:translate-y-px disabled:opacity-40 disabled:pointer-events-none;
+  }
+  /* Neutral light-on-dark button (secondary / "Done") */
+  .btn-primary {
+    @apply btn bg-ink text-paper hover:bg-white;
+  }
+  /* Amber primary CTA (§21.1/§21.5) */
+  .btn-electric {
+    @apply btn bg-electric text-[#1a1206] hover:bg-electric-bright shadow-glow;
+  }
+  .btn-ghost {
+    @apply btn bg-transparent text-ink-soft hover:text-ink hover:bg-white/5;
+  }
+  /* Card = elevated obsidian surface + hairline + inner top-highlight (§21.3) */
+  .card {
+    @apply rounded-3xl bg-surface border border-line shadow-card;
+  }
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-soft;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-line
+           bg-white/5 px-3 py-1 text-[13px] font-medium text-ink-soft;
+  }
+  .token {
+    @apply inline-flex items-center rounded-lg px-2.5 py-1 text-[14px] font-medium
+           transition-all duration-150 select-none;
+  }
+}
+
+/* The cinematic awe surface — obsidian with a cool luminance bloom behind (NO
+   purple/AI-gradient, §21.6). Light is the "electric" element (§21). */
+.aurora-field {
+  background:
+    radial-gradient(120% 90% at 50% -10%, rgba(140, 190, 255, 0.16), transparent 60%),
+    radial-gradient(90% 70% at 80% 10%, rgba(242, 169, 59, 0.08), transparent 55%),
+    #0a0b0d;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* §21.7 The Bloom — one signature reveal, reused everywhere. */
+.bloom {
+  animation: bloom 600ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.bloom-amber {
+  animation: bloom-amber 600ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes bloom {
+  0% { opacity: 0; transform: scale(0.94); filter: brightness(0.6); box-shadow: 0 0 0 0 rgba(140,190,255,0.28); }
+  60% { opacity: 1; filter: brightness(1.15); box-shadow: 0 0 120px 24px rgba(140,190,255,0.28); }
+  100% { opacity: 1; transform: scale(1); filter: brightness(1); box-shadow: 0 0 48px 4px rgba(140,190,255,0.14); }
+}
+@keyframes bloom-amber {
+  0% { opacity: 0; transform: scale(0.94); filter: brightness(0.6); box-shadow: 0 0 0 0 rgba(242,169,59,0.45); }
+  60% { opacity: 1; filter: brightness(1.15); box-shadow: 0 0 120px 24px rgba(242,169,59,0.45); }
+  100% { opacity: 1; transform: scale(1); filter: brightness(1); box-shadow: 0 0 48px 4px rgba(242,169,59,0.18); }
+}
+
+/* §21.9 kinetic type — staggered word reveal in the hook only. Words rise + settle
+   with a weight/tracking shift, cinematic (prestige title), never bouncing letters. */
+.kinetic-word {
+  display: inline-block;
+  opacity: 0;
+  animation: word-in 560ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes word-in {
+  0% { opacity: 0; transform: translateY(0.5em); filter: blur(4px); letter-spacing: 0.02em; }
+  60% { opacity: 1; filter: blur(0); }
+  100% { opacity: 1; transform: translateY(0); filter: blur(0); letter-spacing: 0; }
+}
+
+.shimmer-text {
+  background: linear-gradient(100deg, rgba(245, 246, 247, 0.5) 20%, #ffffff 40%, rgba(245, 246, 247, 0.5) 60%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* §21.6 / §21.7: motion respects reduced-motion — Bloom degrades to a fade. */
+@media (prefers-reduced-motion: reduce) {
+  .bloom,
+  .bloom-amber {
+    animation: fade-up 250ms ease both;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
