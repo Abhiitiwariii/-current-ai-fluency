@@ -202,8 +202,27 @@ export default function Home({
           </div>
         </section>
 
+        {/* Prominent feedback CTA */}
+        <div className="mt-14 rounded-3xl border border-electric/30 bg-surface p-6 text-center shadow-card">
+          <p className="font-display text-[20px] leading-snug text-ink">
+            How’s Current working for you?
+          </p>
+          <p className="mt-1 text-[14px] text-ink-soft">
+            Tell us what you love and what you’d change — 30 seconds.
+          </p>
+          <button
+            onClick={() => {
+              track("feedback_opened");
+              setShowFeedback(true);
+            }}
+            className="btn-electric mt-4 inline-flex items-center gap-2 px-7 py-3.5 text-[16px]"
+          >
+            💬 Share your feedback
+          </button>
+        </div>
+
         {/* Demo utility */}
-        <div className="mt-16 flex items-center justify-center gap-4 border-t border-line pt-6 text-center">
+        <div className="mt-12 flex items-center justify-center gap-4 border-t border-line pt-6 text-center">
           {programComplete && (
             <>
               <button
@@ -215,16 +234,6 @@ export default function Home({
               <span className="text-ink-soft/30">·</span>
             </>
           )}
-          <button
-            onClick={() => {
-              track("feedback_opened");
-              setShowFeedback(true);
-            }}
-            className="text-[15px] font-semibold text-electric/90 hover:text-electric"
-          >
-            Feedback
-          </button>
-          <span className="text-ink-soft/30">·</span>
           <button
             onClick={onOpenMetrics}
             className="text-[12px] text-ink-soft/70 hover:text-ink-soft"

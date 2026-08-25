@@ -29,7 +29,10 @@ export default function DropSession({ onExit, onDone, onCertificate, mode = "ful
   // Tier 0 runs only right after onboarding, which now shows the video hook
   // itself — so skip it here to avoid playing the same clip twice back-to-back.
   const includeVideo = isFull && tierIndex !== 0 && !!(drop.video && drop.video.yt);
-  const includeAwe = isFull;
+  // v3.2: the first drop (tier 0, right after the onboarding video) skips the awe
+  // "watch" card and goes straight into the questions — two passive beats back to
+  // back felt redundant. Later tiers keep their hook (incl. the tier-1 demo).
+  const includeAwe = isFull && tierIndex !== 0;
   const preSteps = (includeVideo ? 1 : 0) + (includeAwe ? 1 : 0);
   const steps = drop.reps.length + preSteps;
 

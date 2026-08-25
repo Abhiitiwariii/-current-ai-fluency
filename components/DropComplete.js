@@ -84,9 +84,9 @@ export default function DropComplete({
           track("feedback_opened", { source: "complete" });
           setShowFeedback(true);
         }}
-        className="mx-auto mt-6 block text-[13px] font-medium text-electric hover:opacity-80"
+        className="mx-auto mt-6 inline-flex items-center gap-2 rounded-full border border-electric/40 bg-surface px-6 py-3 text-[15px] font-semibold text-ink shadow-card transition-all hover:-translate-y-0.5 hover:border-electric"
       >
-        💬 Got a minute? Tell us what you think →
+        💬 Share your feedback
       </button>
 
       {showFeedback && (
