@@ -6,6 +6,7 @@ import { gradeRep } from "@/lib/grading";
 import { getState, completeDrop } from "@/lib/store";
 import { track } from "@/lib/analytics";
 import ProgressBar from "./ProgressBar";
+import VideoHook from "./VideoHook";
 import AweCard from "./AweCard";
 import CoachFooter from "./CoachFooter";
 import DropComplete from "./DropComplete";
@@ -19,14 +20,22 @@ const REP_COMPONENTS = {
   assemble: Assemble,
 };
 
-// Orchestrates one bounded daily drop: awe -> reps -> completion (§6).
-// mode "reps-only" resumes a queued rep after an audio micro-win — skips the awe.
-export default function DropSession({ onExit, onDone, mode = "full" }) {
-  const drop = useMemo(() => getDrop(getState().job), []);
-  const includeAwe = mode !== "reps-only";
-  const steps = drop.reps.length + (includeAwe ? 1 : 0);
+// Orchestrates one bounded daily drop: video hook -> awe -> reps -> completion.
+// mode "reps-only" resumes a queued rep after an audio micro-win — skips the
+// video + awe. tierIndex selects which capability tier's content to run (§11).
+export default function DropSession({ onExit, onDone, onCertificate, mode = "full", tierIndex = 0 }) {
+  const drop = useMemo(() => getDrop(getState().job, tierIndex), [tierIndex]);
+  const isFull = mode !== "reps-only";
+  // Tier 0 runs only right after onboarding, which now shows the video hook
+  // itself — so skip it here to avoid playing the same clip twice back-to-back.
+  const includeVideo = isFull && tierIndex !== 0 && !!(drop.video && drop.video.yt);
+  const includeAwe = isFull;
+  const preSteps = (includeVideo ? 1 : 0) + (includeAwe ? 1 : 0);
+  const steps = drop.reps.length + preSteps;
 
-  const [phase, setPhase] = useState(includeAwe ? "awe" : "rep"); // awe | rep | done
+  const [phase, setPhase] = useState(
+    includeVideo ? "video" : includeAwe ? "awe" : "rep"
+  ); // video | awe | rep | done
   const [repIndex, setRepIndex] = useState(0);
   const [result, setResult] = useState(null); // grading result for current rep
   const [summary, setSummary] = useState(null); // completion summary
@@ -48,11 +57,13 @@ export default function DropSession({ onExit, onDone, mode = "full" }) {
   }, [phase, repIndex]);
 
   const progressValue =
-    phase === "awe"
+    phase === "video"
       ? 1
+      : phase === "awe"
+      ? (includeVideo ? 1 : 0) + 1
       : phase === "done"
       ? steps
-      : repIndex + 1 + (includeAwe ? 1 : 0);
+      : repIndex + 1 + preSteps;
 
   function startReps() {
     setPhase("rep");
@@ -82,6 +93,7 @@ export default function DropSession({ onExit, onDone, mode = "full" }) {
         reps: drop.reps.length,
         new_capability: s.newCapability,
       });
+      if (s.programComplete) track("certificate_earned", {});
       setSummary(s);
       setPhase("done");
     } else {
@@ -89,7 +101,7 @@ export default function DropSession({ onExit, onDone, mode = "full" }) {
     }
   }
 
-  // Leaving mid-rep is an abandon (§17 drop-off). Ignore exits from awe/done.
+  // Leaving mid-rep is an abandon (§17 drop-off). Ignore exits from video/awe/done.
   function handleExit() {
     if (phase === "rep") {
       track("rep_abandoned", { card_id: cardId(repIndex), drop_id: drop.id });
@@ -108,8 +120,17 @@ export default function DropSession({ onExit, onDone, mode = "full" }) {
           </div>
         )}
 
+        {phase === "video" && (
+          <VideoHook
+            video={drop.video}
+            theme={drop.theme}
+            job={drop.job}
+            onContinue={() => setPhase("awe")}
+          />
+        )}
+
         {phase === "awe" && (
-          <AweCard awe={drop.awe} theme={drop.theme} onContinue={startReps} />
+          <AweCard awe={drop.awe} theme={drop.theme} job={drop.job} onContinue={startReps} />
         )}
 
         {phase === "rep" && RepComponent && (
@@ -127,7 +148,9 @@ export default function DropSession({ onExit, onDone, mode = "full" }) {
               streak={summary.streak}
               forgiven={summary.forgiven}
               capabilityId={drop.capabilityId}
+              programComplete={summary.programComplete}
               onHome={onDone}
+              onCertificate={onCertificate}
             />
           </div>
         )}

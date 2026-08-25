@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { achievementFor } from "@/lib/content";
 import { track } from "@/lib/analytics";
+import { openWhatsApp } from "@/lib/whatsapp";
 
 // Growth-loop stub (§18): completion produces a status-flattering, shareable
 // achievement. The visual is the cinematic "awe" register (dark, electric) —
@@ -15,7 +16,7 @@ export default function ShareCard({ capabilityId, job }) {
   // Single shareable web link (§15) — the app root. In SSR/build this is empty.
   const link =
     typeof window !== "undefined" ? window.location.origin || "" : "";
-  const shareText = `${ach.hook}\n\nToday I learned: ${ach.title}. 90 seconds a day on Current.\n${link}`;
+  const shareText = `${ach.hook}\n\nToday I learned: ${ach.title}. A few minutes a day on Current.\n${link}`;
 
   async function share() {
     track("achievement_shared", { capability: capabilityId, method: "native" });
@@ -28,6 +29,11 @@ export default function ShareCard({ capabilityId, job }) {
       }
     }
     copy("native-fallback");
+  }
+
+  function shareWhatsApp() {
+    track("achievement_shared", { capability: capabilityId, method: "whatsapp" });
+    openWhatsApp(shareText);
   }
 
   function copy(method = "copy") {
@@ -60,7 +66,7 @@ export default function ShareCard({ capabilityId, job }) {
           </p>
         </div>
         <p className="mt-4 text-[12px] text-white/50">
-          Learned in 90 seconds on <span className="font-semibold text-white/80">Current</span>
+          Learned in minutes on <span className="font-semibold text-white/80">Current</span>
         </p>
       </div>
 
@@ -77,6 +83,12 @@ export default function ShareCard({ capabilityId, job }) {
           {copied ? "Copied ✓" : "Copy link"}
         </button>
       </div>
+      <button
+        onClick={shareWhatsApp}
+        className="btn-ghost mt-2 w-full py-3 text-[14px]"
+      >
+        Share on WhatsApp
+      </button>
       <p className="mt-2 text-center text-[11px] text-ink-soft/70">
         Flatters what you can do — never shows a streak or a miss (§18).
       </p>

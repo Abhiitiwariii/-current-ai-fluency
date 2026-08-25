@@ -30,3 +30,7 @@ yarn-error.log*
 
 # course brief docs (not ours to publish)
 *.docx
+
+# Python caches (research scripts)
+__pycache__/
+*.pyc

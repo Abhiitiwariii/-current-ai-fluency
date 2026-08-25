@@ -3,20 +3,42 @@
 import { useState } from "react";
 import { createAccount } from "@/lib/store";
 import { track } from "@/lib/analytics";
+import { supabase, isSupabaseConfigured, insertRow } from "@/lib/supabase";
 
 // §10: account creation AFTER the aha — "this respects my time" first, signup
-// second. Skippable (§5 forgiving; never gate the win behind a form). Local-only.
+// second. Skippable (§5 forgiving; never gate the win behind a form).
+// v3.2: adds an optional "Continue with Google" path (shown only when Supabase
+// is configured); the local name/email path always works as a graceful floor.
 // Books the account_created funnel step (§16 guardrail, §17).
 export default function AccountPrompt({ streak, onDone }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [saved, setSaved] = useState(false);
+  const googleEnabled = isSupabaseConfigured();
 
   function save() {
+    const trimmedEmail = email.trim();
     createAccount({ name, email });
-    track("account_created", { has_email: !!email.trim() });
+    track("account_created", { has_email: !!trimmedEmail, method: "local" });
+    // v3.2: capture a typed email into Supabase too (best-effort, no-op if unconfigured).
+    if (trimmedEmail) {
+      insertRow("signups", {
+        email: trimmedEmail,
+        name: name.trim() || null,
+        source: "account",
+      });
+    }
     setSaved(true);
     setTimeout(() => onDone?.(), 900);
+  }
+
+  // v3.2: full-page redirect to Google, back to the app root (see SUPABASE_SETUP.md).
+  function continueWithGoogle() {
+    track("google_signin_started");
+    supabase?.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: window.location.origin },
+    });
   }
 
   if (saved) {
@@ -42,7 +64,24 @@ export default function AccountPrompt({ streak, onDone }) {
         So tomorrow’s drop finds you — and your progress is never lost.
       </p>
 
-      <div className="mt-4 space-y-2.5">
+      {googleEnabled && (
+        <>
+          <button
+            onClick={continueWithGoogle}
+            className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-line bg-surface px-4 py-3 text-[15px] font-semibold text-ink transition-colors hover:border-electric"
+          >
+            <span className="text-[16px]">G</span>
+            Continue with Google
+          </button>
+          <div className="my-3 flex items-center gap-3 text-[11px] uppercase tracking-wide text-ink-soft/60">
+            <span className="h-px flex-1 bg-line" />
+            or
+            <span className="h-px flex-1 bg-line" />
+          </div>
+        </>
+      )}
+
+      <div className={googleEnabled ? "space-y-2.5" : "mt-4 space-y-2.5"}>
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}

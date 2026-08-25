@@ -1,5 +1,8 @@
 # Acquisition & Test-Run Kit — Current
 
+> **🔗 LIVE LINK (share this everywhere): https://current-ai-fluency.vercel.app/**
+> Source: https://github.com/Abhiitiwariii/-current-ai-fluency (auto-deploys on push to `main`).
+
 _Case Study 5 · Part II §18–§19. Goal: get ~10 mid-career **marketers** through one
 shared link, activate them (first awe→rep loop), and capture behavioural signal + D1
 return. Warm network first — this is directional signal, not a powered experiment._

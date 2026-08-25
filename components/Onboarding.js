@@ -1,14 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { JOBS, getDrop } from "@/lib/content";
+import { JOBS, videoForJob } from "@/lib/content";
 import { track } from "@/lib/analytics";
-import AweDemo from "@/components/AweDemo";
-import KineticHeadline from "@/components/KineticHeadline";
+import VideoHook from "@/components/VideoHook";
 
+// Minute-one flow (v3.1): persona picker → motivating video → straight into the
+// first drop (Foundations, tier 0). The video is the hook now; the old simulated
+// awe-demo beat was cut (two passive "watch" screens back-to-back was one too many).
 export default function Onboarding({ onStart }) {
   const [job, setJob] = useState(null);
-  const drop = job ? getDrop(job) : null;
+  const video = job ? videoForJob(job) : null;
 
   // §17: funnel entry. Fires once when the cold-start screen mounts.
   useEffect(() => {
@@ -17,9 +19,11 @@ export default function Onboarding({ onStart }) {
 
   function selectJob(jobId) {
     setJob(jobId);
-    // job_selected → the tailored awe demo renders immediately, so log both.
     track("job_selected", { job: jobId });
-    track("awe_card_viewed", { drop_id: getDrop(jobId).id, source: "onboarding" });
+  }
+
+  function resetJob() {
+    setJob(null);
   }
 
   return (
@@ -34,8 +38,8 @@ export default function Onboarding({ onStart }) {
               <span className="italic text-electric">left behind</span>.
             </h1>
             <p className="mt-4 text-[17px] leading-relaxed text-ink-soft">
-              AI is changing your job faster than any course can keep up. Ninety
-              seconds a day keeps you genuinely fluent — not in theory, in your
+              AI is changing your job faster than any course can keep up. A few
+              minutes a day keeps you genuinely fluent — not in theory, in your
               actual work.
             </p>
 
@@ -74,46 +78,19 @@ export default function Onboarding({ onStart }) {
         {job && (
           <div className="animate-scale-in">
             <button
-              onClick={() => setJob(null)}
+              onClick={resetJob}
               className="mb-6 text-[13px] font-medium text-ink-soft hover:text-ink"
             >
               ← different role
             </button>
 
-            {/* The minute-one "whoa" — value before any signup */}
-            <div className="aurora-field overflow-hidden rounded-3xl p-7 text-white shadow-glow">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/60">
-                Watch this
-              </p>
-              <h2 className="mt-3 font-display text-[26px] leading-tight">
-                <KineticHeadline text={drop.awe.headline} />
-              </h2>
-              <div className="mt-5">
-                <AweDemo
-                  key={job}
-                  input={drop.awe.input}
-                  outputs={drop.awe.outputs}
-                />
-              </div>
-            </div>
-
-            <p className="mt-7 text-center text-[16px] leading-relaxed text-ink">
-              Impressive — but the skill isn’t watching it.
-              <br />
-              <span className="text-ink-soft">
-                It’s making it do that on command. Your turn.
-              </span>
-            </p>
-
-            <button
-              onClick={() => onStart(job)}
-              className="btn-electric mt-6 w-full py-4 text-[16px]"
-            >
-              Start my first drop
-            </button>
-            <p className="mt-3 text-center text-[12px] text-ink-soft">
-              90 seconds · no account needed to try
-            </p>
+            {/* The motivating video, then straight into the first drop. */}
+            <VideoHook
+              video={video}
+              theme="onboarding"
+              job={job}
+              onContinue={() => onStart(job)}
+            />
           </div>
         )}
       </div>

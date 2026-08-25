@@ -7,8 +7,8 @@ import ProgressBar from "./ProgressBar";
 
 // §13.1 Commute / audio mode: hands & eyes free. Also serves §13.6 "tired mode"
 // (pure passive awe that lightly counts). Listening = a §13.2 micro-win.
-export default function AudioDrop({ onExit, onRepNow, onLater }) {
-  const drop = useMemo(() => getDrop(getState().job), []);
+export default function AudioDrop({ onExit, onRepNow, onLater, tierIndex = 0 }) {
+  const drop = useMemo(() => getDrop(getState().job, tierIndex), [tierIndex]);
   const lines = drop.audio.lines;
 
   const [idx, setIdx] = useState(-1); // -1 = not started

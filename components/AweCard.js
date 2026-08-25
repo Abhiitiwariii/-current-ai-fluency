@@ -2,10 +2,11 @@
 
 import AweDemo from "./AweDemo";
 import KineticHeadline from "./KineticHeadline";
+import PersonaArt from "./PersonaArt";
 import { coverFor, textureBackground } from "@/lib/cover";
 
 // The cinematic "whoa" (§7: calm frame, electric moment). Awe opens, action closes.
-export default function AweCard({ awe, theme, onContinue }) {
+export default function AweCard({ awe, theme, job, onContinue }) {
   // §21.8: today's seeded cover — tint colors the glow only (amber stays UI accent),
   // layout scales the title emphasis, texture is a low-contrast field behind it.
   const cover = coverFor(theme);
@@ -43,7 +44,11 @@ export default function AweCard({ awe, theme, onContinue }) {
           {awe.input && awe.outputs ? (
             <AweDemo input={awe.input} outputs={awe.outputs} />
           ) : (
-            <div className="space-y-3 text-[15px]">
+            <div className="space-y-4 text-[15px]">
+              {/* v3.1: per-persona illustration so text-only tiers aren't blank. */}
+              <div className="overflow-hidden rounded-2xl border border-white/10">
+                <PersonaArt job={job} className="h-32 w-full" />
+              </div>
               <div className="rounded-2xl bg-white/10 px-5 py-4">
                 <span className="mt-1 block text-white/90">{awe.after}</span>
               </div>

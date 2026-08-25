@@ -1,0 +1,114 @@
+"use client";
+
+import { useState } from "react";
+import { track, getUserId } from "@/lib/analytics";
+import { insertRow } from "@/lib/supabase";
+
+// FeedbackForm (v3.2) — a light "what do you like / what would you change" prompt.
+// Dual-write, best-effort: always logs locally via track() (so it rides the
+// existing Metrics JSON/CSV export), and additionally inserts to Supabase when
+// configured. Failures are swallowed — the user always sees a thank-you.
+export default function FeedbackForm({ onClose }) {
+  const [likes, setLikes] = useState("");
+  const [dislikes, setDislikes] = useState("");
+  const [email, setEmail] = useState("");
+  const [sent, setSent] = useState(false);
+
+  function submit() {
+    const l = likes.trim();
+    const d = dislikes.trim();
+    const e = email.trim();
+    track("feedback_submitted", {
+      has_likes: !!l,
+      has_dislikes: !!d,
+      has_email: !!e,
+    });
+    // Best-effort Supabase capture (no-op if unconfigured).
+    insertRow("feedback", {
+      user_id: getUserId(),
+      likes: l || null,
+      dislikes: d || null,
+      email: e || null,
+    });
+    if (e) insertRow("signups", { email: e, source: "feedback" });
+    setSent(true);
+    setTimeout(() => onClose?.(), 1100);
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 backdrop-blur-sm sm:items-center"
+      onClick={onClose}
+    >
+      <div
+        className="card w-full max-w-sm p-6 text-left"
+        onClick={(ev) => ev.stopPropagation()}
+      >
+        {sent ? (
+          <div className="py-6 text-center">
+            <p className="font-display text-[20px] text-ink">Thank you ✓</p>
+            <p className="mt-1 text-[14px] text-ink-soft">
+              This is exactly what shapes the next drops.
+            </p>
+          </div>
+        ) : (
+          <>
+            <p className="eyebrow mb-1">Tell us straight</p>
+            <p className="font-display text-[19px] leading-snug text-ink">
+              What do you think of Current?
+            </p>
+
+            <div className="mt-4 space-y-3">
+              <label className="block">
+                <span className="mb-1 block text-[13px] font-semibold text-ink">
+                  What do you like?
+                </span>
+                <textarea
+                  value={likes}
+                  onChange={(e) => setLikes(e.target.value)}
+                  rows={2}
+                  placeholder="The part that clicked…"
+                  className="w-full resize-none rounded-xl border border-line bg-surface px-4 py-2.5 text-[15px] text-ink outline-none transition-colors focus:border-electric"
+                />
+              </label>
+              <label className="block">
+                <span className="mb-1 block text-[13px] font-semibold text-ink">
+                  What would you change?
+                </span>
+                <textarea
+                  value={dislikes}
+                  onChange={(e) => setDislikes(e.target.value)}
+                  rows={2}
+                  placeholder="What felt off, or missing…"
+                  className="w-full resize-none rounded-xl border border-line bg-surface px-4 py-2.5 text-[15px] text-ink outline-none transition-colors focus:border-electric"
+                />
+              </label>
+              <input
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                type="email"
+                placeholder="Email (optional — if you want a reply)"
+                autoComplete="email"
+                className="w-full rounded-xl border border-line bg-surface px-4 py-3 text-[15px] text-ink outline-none transition-colors focus:border-electric"
+              />
+            </div>
+
+            <button
+              onClick={submit}
+              disabled={!likes.trim() && !dislikes.trim()}
+              className="btn-electric mt-4 w-full py-3 text-[15px] disabled:opacity-50"
+            >
+              Send feedback
+            </button>
+            <button
+              onClick={onClose}
+              className="mt-2 w-full text-center text-[12px] text-ink-soft/70 hover:text-ink-soft"
+            >
+              Close
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}

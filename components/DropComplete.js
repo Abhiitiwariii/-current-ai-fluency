@@ -3,15 +3,25 @@
 import { useState } from "react";
 import { CAPABILITIES } from "@/lib/content";
 import { getState } from "@/lib/store";
+import { track } from "@/lib/analytics";
 import ShareCard from "./ShareCard";
 import AccountPrompt from "./AccountPrompt";
+import FeedbackForm from "./FeedbackForm";
 
 // Completion ritual (§6/§11): bounded end, streak booked, capability unlocked.
 // No XP, no confetti-toy energy — a calm, earned "you're current."
-export default function DropComplete({ streak, forgiven, capabilityId, onHome }) {
+export default function DropComplete({
+  streak,
+  forgiven,
+  capabilityId,
+  programComplete,
+  onHome,
+  onCertificate,
+}) {
   const cap = CAPABILITIES.find((c) => c.id === capabilityId);
   // §10: prompt for an account only if there isn't one yet (after the aha).
   const [showAccount, setShowAccount] = useState(!getState().account);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   return (
     <div className="text-center">
@@ -41,12 +51,51 @@ export default function DropComplete({ streak, forgiven, capabilityId, onHome })
         </div>
       )}
 
+      {/* v2: cleared all five capabilities → the certificate is earned. */}
+      {programComplete && (
+        <div className="bloom-amber card mx-auto mt-8 max-w-sm border-electric/40 p-6 text-center">
+          <p className="eyebrow mb-1">🎓 All five capabilities</p>
+          <p className="font-display text-[22px] leading-snug text-ink">
+            You’re AI-fluent — for real.
+          </p>
+          <p className="mt-2 text-[14px] text-ink-soft">
+            Every working AI skill, done. Claim the certificate with your name on it.
+          </p>
+          <button onClick={onCertificate} className="btn-electric mt-4 w-full">
+            Claim my certificate →
+          </button>
+        </div>
+      )}
+
       {/* Growth-loop stub (§18): share the capability just unlocked. */}
-      {cap && <ShareCard capabilityId={capabilityId} job={getState().job} />}
+      {cap && !programComplete && (
+        <ShareCard capabilityId={capabilityId} job={getState().job} />
+      )}
 
       {/* §10: account creation AFTER the aha — skippable, never gates the win. */}
       {showAccount && (
         <AccountPrompt streak={streak} onDone={() => setShowAccount(false)} />
+      )}
+
+      {/* v3.2: feedback invite right at the save moment, so people notice they
+          can weigh in — not only tucked in the Home footer. */}
+      <button
+        onClick={() => {
+          track("feedback_opened", { source: "complete" });
+          setShowFeedback(true);
+        }}
+        className="mx-auto mt-6 block text-[13px] font-medium text-electric hover:opacity-80"
+      >
+        💬 Got a minute? Tell us what you think →
+      </button>
+
+      {showFeedback && (
+        <FeedbackForm
+          onClose={() => {
+            track("feedback_dismissed", { source: "complete" });
+            setShowFeedback(false);
+          }}
+        />
       )}
 
       <p className="mx-auto mt-8 max-w-sm text-[15px] leading-relaxed text-ink-soft">
