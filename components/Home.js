@@ -6,7 +6,6 @@ import { coverFor, textureBackground } from "@/lib/cover";
 import { track } from "@/lib/analytics";
 import CapabilityLadder from "./CapabilityLadder";
 import NotificationBanner from "./NotificationBanner";
-import WhatsAppNudge from "./WhatsAppNudge";
 import FeedbackForm from "./FeedbackForm";
 import AccountPrompt from "./AccountPrompt";
 
@@ -169,9 +168,6 @@ export default function Home({
                 </span>
                 <span className="text-ink-soft">→</span>
               </button>
-
-              {/* §13.7 WhatsApp delivery vector — opens WhatsApp pre-filled */}
-              <WhatsAppNudge state={state} />
             </div>
           )}
         </section>
