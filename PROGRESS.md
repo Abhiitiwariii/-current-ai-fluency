@@ -2,17 +2,51 @@
 
 _Last saved: 2026-08-26 · pick up in a fresh session anytime._
 
-## 🚀 LIVE (2026-08-26) — deployed & fully configured
-**https://current-ai-fluency.vercel.app** — latest build deployed (auto-deploys on push to `main`).
-- **Supabase wired in production** (env vars present via the Vercel–Supabase integration); Google
-  login + feedback/email capture active. Auth redirect URL added in Supabase for the Vercel origin.
-- **Own 30s persona hook videos** on the project's YouTube channel (embedding fixed by passing the
-  page `origin` to the standard `youtube.com/embed` — nocookie/origin-less URLs threw Error 153).
-- **Email capture:** "Save my progress" is persistent on Home (below the streak) + on the completion
-  screen. Local save now **requires a valid email**; Google captures a verified email automatically.
-  Rows land in `auth.users` (Google) and the `signups` table (source google/account/feedback);
-  comments in `feedback`. Anon key is insert-only (RLS).
-- Feedback surfaced on Home (enlarged link) + completion screen.
+## 🚀 LIVE (2026-08-26) — deployed & fully configured · latest commit `3d784cb`
+**https://current-ai-fluency.vercel.app** — auto-deploys on push to `main` (GitHub → Vercel).
+Everything below is built (`npm run build` exits 0), pushed, and verified live via curl (HTTP 200,
+new build markers + Supabase env inlined in the prod bundle).
+
+**Backend (Supabase — project `tknafzuxektijqhxzjtb`):**
+- Env wired in prod via the Vercel–Supabase integration (`NEXT_PUBLIC_SUPABASE_URL` /
+  `NEXT_PUBLIC_SUPABASE_ANON_KEY`); also in local `.env.local` (gitignored). `lib/supabase.js`
+  builds the client only when both env vars exist, else no-ops (graceful local fallback).
+- Auth: **Google OAuth** enabled; Vercel origin added to Supabase Auth → Redirect URLs + Site URL
+  (user confirmed). Client-side `signInWithOAuth({ redirectTo: window.location.origin })`; session
+  hydrated on mount in `app/page.js` → `account` field (`provider:"google"`).
+- Tables (`supabase/migrations/0001_feedback_signups.sql`, anon **insert-only** RLS):
+  `signups(email, name, source, created_at)` + `feedback(user_id, likes, dislikes, email, created_at)`.
+  Google emails also live in `auth.users`. Verified inserts return 201; anon reads blocked by RLS.
+
+**Email capture (the acquisition goal):**
+- **"Save my progress"** is persistent on Home (button below the streak, opens the prompt as an
+  overlay) AND on the completion screen. Local save now **REQUIRES a valid email** (Save disabled
+  until valid); **Google** is one-tap and captures a verified email automatically. "Not now" still
+  lets people skip. All save paths write to `signups` (source `google`/`account`/`feedback`).
+
+**Videos (own assets, replaced the TED embeds):**
+- Five **30s per-persona explainer clips** produced with the Remotion project in `/video`
+  (obsidian+amber, watermark "Created by Abhilash", low-key ambient bed, proof beat + app/feedback
+  CTA), uploaded to the project's YouTube channel. `VIDEO_BY_JOB` ids: marketing `2E7_Z4ySxjU`,
+  ops `QnI3X4xhx3o`, hr `pYjRKNaDKZU`, sales `YvbDq-yUjpU`, finance `jA9Ep6dLEUc` (start:0, no end).
+- **Embed fix (Error 153):** fresh uploads threw "player configuration error" on
+  youtube-nocookie / origin-less `/embed/`. `VideoHook` now uses `youtube.com/embed` + `&origin=` +
+  `playsinline`. (New channel also needed "Not made for kids" + Allow embedding + public.)
+
+**UX this session:**
+- Onboarding is video-first: persona pick → video → **straight into the questions** (the awe
+  "watch" card is skipped on the first drop / tier 0 for all personas; later tiers keep their hook,
+  incl. the tier-1 streaming demo).
+- Feedback: prominent buttons (Home "How's Current working for you?" card + completion-screen
+  button) — replaced the tiny footer link.
+
+**Repo:** commits `b09f713` (v3.2 backend) · `198aa60` (videos + Remotion source) · `b3d4682`
+(embed fix) · `71c18d5` (Home save/feedback) · `e931135` (required email) · `3d784cb` (skip awe +
+feedback buttons) · `1efdf5d` (this doc). `video/node_modules`, `video/out`, `video/public/ambient.wav`
+gitignored (regenerable — see `video/README.md`).
+
+**Only-you steps (all reported done):** Supabase SQL run · Google provider + redirect URLs · Vercel
+env vars. Remaining optional: swap the baked-in ambient music for a YouTube Audio Library track.
 
 ---
 
