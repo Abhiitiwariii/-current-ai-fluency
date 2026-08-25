@@ -1,6 +1,20 @@
 # Build Progress — Case Study 5 · "Current"
 
-_Last saved: 2026-08-25 · pick up in a fresh session anytime._
+_Last saved: 2026-08-26 · pick up in a fresh session anytime._
+
+## 🚀 LIVE (2026-08-26) — deployed & fully configured
+**https://current-ai-fluency.vercel.app** — latest build deployed (auto-deploys on push to `main`).
+- **Supabase wired in production** (env vars present via the Vercel–Supabase integration); Google
+  login + feedback/email capture active. Auth redirect URL added in Supabase for the Vercel origin.
+- **Own 30s persona hook videos** on the project's YouTube channel (embedding fixed by passing the
+  page `origin` to the standard `youtube.com/embed` — nocookie/origin-less URLs threw Error 153).
+- **Email capture:** "Save my progress" is persistent on Home (below the streak) + on the completion
+  screen. Local save now **requires a valid email**; Google captures a verified email automatically.
+  Rows land in `auth.users` (Google) and the `signups` table (source google/account/feedback);
+  comments in `feedback`. Anon key is insert-only (RLS).
+- Feedback surfaced on Home (enlarged link) + completion screen.
+
+---
 
 ## ✅ DONE (2026-08-25 · v3.2) — 1-min videos · Google login · Feedback · Supabase (ready-to-connect)
 Grilled → locked → built. `npm run build` exits 0 (4 routes). Bundle 28.2→**181 kB First Load**
