@@ -8,6 +8,7 @@ import CapabilityLadder from "./CapabilityLadder";
 import NotificationBanner from "./NotificationBanner";
 import WhatsAppNudge from "./WhatsAppNudge";
 import FeedbackForm from "./FeedbackForm";
+import AccountPrompt from "./AccountPrompt";
 
 // Home: forgiving streak, today's drop, capability ladder, stay-current teaser.
 // v2: the drop advances tier-by-tier (one capability per drop); once all five
@@ -23,6 +24,9 @@ export default function Home({
   onReset,
 }) {
   const [showFeedback, setShowFeedback] = useState(false);
+  const [showSave, setShowSave] = useState(false);
+  const [savedLocally, setSavedLocally] = useState(false);
+  const hasAccount = !!state.account || savedLocally;
   const isGoogle = state.account?.provider === "google";
   const unlocked = state.capabilities.length;
   const programComplete = unlocked >= TRACK_LENGTH;
@@ -50,6 +54,18 @@ export default function Home({
             <span className="text-[13px] text-ink-soft">day streak</span>
           </div>
         </div>
+
+        {/* v3.2: persistent save/sign-in — so people can save progress (and share
+            their email via Google) without finishing a drop first. */}
+        {!hasAccount && (
+          <button
+            onClick={() => setShowSave(true)}
+            className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-electric/40 bg-surface px-5 py-3 text-[15px] font-semibold text-ink shadow-card transition-all hover:-translate-y-0.5 hover:border-electric"
+          >
+            <span className="text-[16px]">✦</span>
+            Save my progress
+          </button>
+        )}
 
         {/* v2: Swiggy-voice in-app notification nudge (fires notification_tapped). */}
         {!programComplete && (
@@ -204,7 +220,7 @@ export default function Home({
               track("feedback_opened");
               setShowFeedback(true);
             }}
-            className="text-[12px] text-ink-soft/70 hover:text-ink-soft"
+            className="text-[15px] font-semibold text-electric/90 hover:text-electric"
           >
             Feedback
           </button>
@@ -243,6 +259,23 @@ export default function Home({
             setShowFeedback(false);
           }}
         />
+      )}
+
+      {showSave && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+          onClick={() => setShowSave(false)}
+        >
+          <div onClick={(e) => e.stopPropagation()}>
+            <AccountPrompt
+              streak={state.streak}
+              onDone={() => {
+                setShowSave(false);
+                setSavedLocally(true);
+              }}
+            />
+          </div>
+        </div>
       )}
     </main>
   );
