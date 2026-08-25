@@ -2,7 +2,7 @@
 
 _Last saved: 2026-08-26 · pick up in a fresh session anytime._
 
-## 🚀 LIVE (2026-08-26) — deployed & fully configured · latest commit `3d784cb`
+## 🚀 LIVE (2026-08-26) — deployed & fully configured · latest commit `2c72a90`
 **https://current-ai-fluency.vercel.app** — auto-deploys on push to `main` (GitHub → Vercel).
 Everything below is built (`npm run build` exits 0), pushed, and verified live via curl (HTTP 200,
 new build markers + Supabase env inlined in the prod bundle).
@@ -23,15 +23,22 @@ new build markers + Supabase env inlined in the prod bundle).
   overlay) AND on the completion screen. Local save now **REQUIRES a valid email** (Save disabled
   until valid); **Google** is one-tap and captures a verified email automatically. "Not now" still
   lets people skip. All save paths write to `signups` (source `google`/`account`/`feedback`).
+- **Feedback form also REQUIRES a valid email now** (Send disabled until email + some text), so
+  every feedback submission is captured with an email → `feedback` + `signups` rows.
 
 **Videos (own assets, replaced the TED embeds):**
 - Five **30s per-persona explainer clips** produced with the Remotion project in `/video`
   (obsidian+amber, watermark "Created by Abhilash", low-key ambient bed, proof beat + app/feedback
-  CTA), uploaded to the project's YouTube channel. `VIDEO_BY_JOB` ids: marketing `2E7_Z4ySxjU`,
-  ops `QnI3X4xhx3o`, hr `pYjRKNaDKZU`, sales `YvbDq-yUjpU`, finance `jA9Ep6dLEUc` (start:0, no end).
-- **Embed fix (Error 153):** fresh uploads threw "player configuration error" on
-  youtube-nocookie / origin-less `/embed/`. `VideoHook` now uses `youtube.com/embed` + `&origin=` +
-  `playsinline`. (New channel also needed "Not made for kids" + Allow embedding + public.)
+  CTA). Also uploaded to the project's YouTube channel (`VIDEO_BY_JOB.yt` ids: marketing
+  `2E7_Z4ySxjU`, ops `QnI3X4xhx3o`, hr `pYjRKNaDKZU`, sales `YvbDq-yUjpU`, finance `jA9Ep6dLEUc`).
+- **⭐ NOW SELF-HOSTED (primary source):** the 5 mp4s live in `public/hooks/*.mp4` (~12 MB total);
+  `VIDEO_BY_JOB` has a `src` per persona and `VideoHook` plays a native `<video>` (with sound) when
+  `src` is present, falling back to the YouTube embed otherwise. This removes the whole YouTube
+  failure class (Private / embedding-disabled / Error 153 / processing lag) — plays from our own
+  domain regardless of YouTube settings.
+- Prior YouTube embed fix (kept for the fallback path): `youtube.com/embed` + `&origin=` +
+  `playsinline` (fresh uploads on youtube-nocookie / origin-less `/embed/` threw Error 153; the
+  new channel also needed "Not made for kids" + Allow embedding + Public).
 
 **UX this session:**
 - Onboarding is video-first: persona pick → video → **straight into the questions** (the awe
@@ -39,11 +46,14 @@ new build markers + Supabase env inlined in the prod bundle).
   incl. the tier-1 streaming demo).
 - Feedback: prominent buttons (Home "How's Current working for you?" card + completion-screen
   button) — replaced the tiny footer link.
+- WhatsApp nudge on Home ("Get your drop on WhatsApp") fixed: was `window.open()` (mobile blocks it
+  for `wa.me`); now a real `<a href>` deep-link (href built after mount), opens WhatsApp reliably.
 
 **Repo:** commits `b09f713` (v3.2 backend) · `198aa60` (videos + Remotion source) · `b3d4682`
 (embed fix) · `71c18d5` (Home save/feedback) · `e931135` (required email) · `3d784cb` (skip awe +
-feedback buttons) · `1efdf5d` (this doc). `video/node_modules`, `video/out`, `video/public/ambient.wav`
-gitignored (regenerable — see `video/README.md`).
+feedback buttons) · `2c72a90` (self-host videos + required feedback email + WhatsApp fix).
+`video/node_modules`, `video/out`, `video/public/ambient.wav` gitignored (regenerable — see
+`video/README.md`); the 5 shipped mp4s live tracked in `public/hooks/`.
 
 **Only-you steps (all reported done):** Supabase SQL run · Google provider + redirect URLs · Vercel
 env vars. Remaining optional: swap the baked-in ambient music for a YouTube Audio Library track.
