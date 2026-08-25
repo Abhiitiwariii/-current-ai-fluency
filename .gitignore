@@ -34,3 +34,8 @@ yarn-error.log*
 # Python caches (research scripts)
 __pycache__/
 *.pyc
+
+# Remotion video project
+video/node_modules/
+video/out/
+video/public/ambient.wav
