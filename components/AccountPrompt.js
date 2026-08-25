@@ -15,8 +15,10 @@ export default function AccountPrompt({ streak, onDone }) {
   const [email, setEmail] = useState("");
   const [saved, setSaved] = useState(false);
   const googleEnabled = isSupabaseConfigured();
+  const emailValid = /^\S+@\S+\.\S+$/.test(email.trim());
 
   function save() {
+    if (!emailValid) return;
     const trimmedEmail = email.trim();
     createAccount({ name, email });
     track("account_created", { has_email: !!trimmedEmail, method: "local" });
@@ -85,23 +87,32 @@ export default function AccountPrompt({ streak, onDone }) {
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="First name"
+          placeholder="First name (optional)"
           autoComplete="given-name"
           className="w-full rounded-xl border border-line bg-surface px-4 py-3 text-[15px] text-ink outline-none transition-colors focus:border-electric"
         />
         <input
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="Email (optional)"
+          placeholder="Your email"
           type="email"
           autoComplete="email"
           className="w-full rounded-xl border border-line bg-surface px-4 py-3 text-[15px] text-ink outline-none transition-colors focus:border-electric"
         />
       </div>
 
-      <button onClick={save} className="btn-electric mt-4 w-full py-3 text-[15px]">
+      <button
+        onClick={save}
+        disabled={!emailValid}
+        className="btn-electric mt-4 w-full py-3 text-[15px] disabled:opacity-50"
+      >
         Save my progress
       </button>
+      {!emailValid && email.trim() !== "" && (
+        <p className="mt-1.5 text-center text-[12px] text-ink-soft/70">
+          Enter a valid email to save.
+        </p>
+      )}
       <button
         onClick={() => {
           track("account_skipped");
