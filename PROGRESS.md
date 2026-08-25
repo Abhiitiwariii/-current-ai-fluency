@@ -2,7 +2,7 @@
 
 _Last saved: 2026-08-26 · pick up in a fresh session anytime._
 
-## 🚀 LIVE (2026-08-26) — deployed & fully configured · latest commit `2c72a90`
+## 🚀 LIVE (2026-08-26) — deployed & fully configured · latest commit `c50247b`
 **https://current-ai-fluency.vercel.app** — auto-deploys on push to `main` (GitHub → Vercel).
 Everything below is built (`npm run build` exits 0), pushed, and verified live via curl (HTTP 200,
 new build markers + Supabase env inlined in the prod bundle).
@@ -25,6 +25,11 @@ new build markers + Supabase env inlined in the prod bundle).
   lets people skip. All save paths write to `signups` (source `google`/`account`/`feedback`).
 - **Feedback form also REQUIRES a valid email now** (Send disabled until email + some text), so
   every feedback submission is captured with an email → `feedback` + `signups` rows.
+- **Feedback → Google (no typing):** the feedback form shows "Use my Google email" (when
+  configured & no known email); already-signed-in users get the email **pre-filled** (passed down
+  from Home's live account state to dodge the OAuth-hydration race). The typed draft is saved before
+  the redirect and, on return, the app **auto-reopens the feedback form** (pending flag in
+  `page.js` → `openFeedbackOnMount` → Home) with the draft + email restored — no re-tapping.
 
 **Videos (own assets, replaced the TED embeds):**
 - Five **30s per-persona explainer clips** produced with the Remotion project in `/video`
@@ -46,14 +51,16 @@ new build markers + Supabase env inlined in the prod bundle).
   incl. the tier-1 streaming demo).
 - Feedback: prominent buttons (Home "How's Current working for you?" card + completion-screen
   button) — replaced the tiny footer link.
-- WhatsApp nudge on Home ("Get your drop on WhatsApp") fixed: was `window.open()` (mobile blocks it
-  for `wa.me`); now a real `<a href>` deep-link (href built after mount), opens WhatsApp reliably.
+- WhatsApp: the Home **"Get your drop on WhatsApp" nudge was REMOVED** (component deleted) — it
+  never opened reliably across devices. The **ShareCard "Share on WhatsApp"** button (achievement
+  share, uses `openWhatsApp` in `lib/whatsapp.js`) is **kept — it works** (shares the app link).
 
 **Repo:** commits `b09f713` (v3.2 backend) · `198aa60` (videos + Remotion source) · `b3d4682`
 (embed fix) · `71c18d5` (Home save/feedback) · `e931135` (required email) · `3d784cb` (skip awe +
-feedback buttons) · `2c72a90` (self-host videos + required feedback email + WhatsApp fix).
-`video/node_modules`, `video/out`, `video/public/ambient.wav` gitignored (regenerable — see
-`video/README.md`); the 5 shipped mp4s live tracked in `public/hooks/`.
+feedback buttons) · `2c72a90` (self-host videos + required feedback email + WhatsApp fix) ·
+`9f317b9` (remove WhatsApp nudge) · `ff48089` (feedback→Google) · `c50247b` (auto-reopen feedback +
+email pass-down). `video/node_modules`, `video/out`, `video/public/ambient.wav` gitignored
+(regenerable — see `video/README.md`); the 5 shipped mp4s live tracked in `public/hooks/`.
 
 **Only-you steps (all reported done):** Supabase SQL run · Google provider + redirect URLs · Vercel
 env vars. Remaining optional: swap the baked-in ambient music for a YouTube Audio Library track.
