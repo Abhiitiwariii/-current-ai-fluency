@@ -170,7 +170,7 @@ export default function Home({
                 <span className="text-ink-soft">→</span>
               </button>
 
-              {/* §13.7 WhatsApp delivery vector — meet them where they live */}
+              {/* §13.7 WhatsApp delivery vector — opens WhatsApp pre-filled */}
               <WhatsAppNudge state={state} />
             </div>
           )}

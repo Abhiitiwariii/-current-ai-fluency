@@ -1,21 +1,26 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { track } from "@/lib/analytics";
-import { dropMessage, openWhatsApp } from "@/lib/whatsapp";
+import { dropMessage, waLink } from "@/lib/whatsapp";
 
-// §13.7 delivery vector — bring the daily drop into WhatsApp, the app the target
-// segment already lives in. Real scheduled push needs the Business API + backend
-// (stubbed, §13.7/§14); this is the honest client-side version: pre-fill WhatsApp
-// with today's drop + the single shared link, to send to self or a peer (§18).
+// §13.7 delivery vector — bring the daily drop into WhatsApp. Uses a real anchor
+// (not window.open, which mobile browsers block for wa.me), so tapping reliably
+// deep-links into the WhatsApp app on mobile / WhatsApp Web on desktop. The href
+// is built after mount so the app-origin link is included without an SSR mismatch.
 export default function WhatsAppNudge({ state }) {
-  function send() {
-    const url = openWhatsApp(dropMessage(state));
-    track("whatsapp_shared", { surface: "home", url_ok: !!url });
-  }
+  const [href, setHref] = useState("https://wa.me/");
+
+  useEffect(() => {
+    setHref(waLink(dropMessage(state)));
+  }, [state]);
 
   return (
-    <button
-      onClick={send}
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={() => track("whatsapp_shared", { surface: "home" })}
       className="mt-3 flex w-full items-center justify-between rounded-2xl border border-line bg-surface px-5 py-4 text-left shadow-card transition-all hover:-translate-y-0.5 hover:shadow-lift"
     >
       <span>
@@ -28,6 +33,6 @@ export default function WhatsAppNudge({ state }) {
         </span>
       </span>
       <span className="text-ink-soft">→</span>
-    </button>
+    </a>
   );
 }

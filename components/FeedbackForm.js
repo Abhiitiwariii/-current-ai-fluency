@@ -13,8 +13,11 @@ export default function FeedbackForm({ onClose }) {
   const [dislikes, setDislikes] = useState("");
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
+  const emailValid = /^\S+@\S+\.\S+$/.test(email.trim());
+  const hasText = !!(likes.trim() || dislikes.trim());
 
   function submit() {
+    if (!emailValid || !hasText) return;
     const l = likes.trim();
     const d = dislikes.trim();
     const e = email.trim();
@@ -87,7 +90,7 @@ export default function FeedbackForm({ onClose }) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 type="email"
-                placeholder="Email (optional — if you want a reply)"
+                placeholder="Your email"
                 autoComplete="email"
                 className="w-full rounded-xl border border-line bg-surface px-4 py-3 text-[15px] text-ink outline-none transition-colors focus:border-electric"
               />
@@ -95,11 +98,16 @@ export default function FeedbackForm({ onClose }) {
 
             <button
               onClick={submit}
-              disabled={!likes.trim() && !dislikes.trim()}
+              disabled={!emailValid || !hasText}
               className="btn-electric mt-4 w-full py-3 text-[15px] disabled:opacity-50"
             >
               Send feedback
             </button>
+            {!emailValid && email.trim() !== "" && (
+              <p className="mt-1.5 text-center text-[12px] text-ink-soft/70">
+                Enter a valid email so we can follow up.
+              </p>
+            )}
             <button
               onClick={onClose}
               className="mt-2 w-full text-center text-[12px] text-ink-soft/70 hover:text-ink-soft"

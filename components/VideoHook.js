@@ -11,7 +11,9 @@ import PersonaArt from "./PersonaArt";
 export default function VideoHook({ video, theme, job, onContinue }) {
   const [playing, setPlaying] = useState(false);
   const [posterOk, setPosterOk] = useState(true);
+  const hasSrc = !!(video && video.src); // self-hosted mp4 — preferred, no YouTube deps
   const hasId = !!(video && video.yt);
+  const playable = hasSrc || hasId;
 
   const poster = hasId
     ? `https://img.youtube.com/vi/${video.yt}/hqdefault.jpg`
@@ -30,9 +32,6 @@ export default function VideoHook({ video, theme, job, onContinue }) {
         origin ? `&origin=${encodeURIComponent(origin)}` : ""
       }${clip}`
     : null;
-  const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(
-    (video && video.search) || "AI for work"
-  )}`;
 
   function play() {
     track("video_started", { yt: video?.yt || null, theme });
@@ -53,7 +52,17 @@ export default function VideoHook({ video, theme, job, onContinue }) {
 
       <div className="mt-5 overflow-hidden rounded-3xl border border-line bg-black shadow-glow">
         <div className="relative aspect-video w-full">
-          {playing && embed ? (
+          {playing && hasSrc ? (
+            // Self-hosted mp4 — plays instantly, with sound, no embed restrictions.
+            // eslint-disable-next-line jsx-a11y/media-has-caption
+            <video
+              className="absolute inset-0 h-full w-full bg-black"
+              src={video.src}
+              autoPlay
+              controls
+              playsInline
+            />
+          ) : playing && embed ? (
             <iframe
               className="absolute inset-0 h-full w-full"
               src={embed}
@@ -63,14 +72,14 @@ export default function VideoHook({ video, theme, job, onContinue }) {
             />
           ) : (
             <button
-              onClick={hasId ? play : undefined}
+              onClick={playable ? play : undefined}
               className="group absolute inset-0 flex items-center justify-center"
-              aria-label={hasId ? "Play video" : "Video unavailable"}
+              aria-label={playable ? "Play video" : "Video unavailable"}
             >
               {/* v3.1: per-persona illustration is the always-present poster base;
-                  the YouTube thumbnail (if it loads) blends over it. */}
+                  a YouTube thumbnail (only when there's no self-hosted mp4) blends over it. */}
               <PersonaArt job={job} className="absolute inset-0 h-full w-full" />
-              {poster && posterOk && (
+              {!hasSrc && poster && posterOk && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={poster}
@@ -80,14 +89,13 @@ export default function VideoHook({ video, theme, job, onContinue }) {
                 />
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/40" />
-              {hasId ? (
+              {playable ? (
                 <span className="relative flex h-16 w-16 items-center justify-center rounded-full bg-electric text-[26px] text-[#1a1206] shadow-glow transition-transform group-hover:scale-105">
                   ▶
                 </span>
               ) : (
                 <span className="relative px-6 text-center text-[14px] text-white/80">
-                  Video not set yet — you can still continue, or open it on
-                  YouTube below.
+                  Video not set yet — you can still continue.
                 </span>
               )}
             </button>
@@ -104,20 +112,22 @@ export default function VideoHook({ video, theme, job, onContinue }) {
       </button>
 
       <div className="mt-3 flex items-center justify-center gap-4 text-[12px]">
-        {!playing && hasId && (
+        {!playing && playable && (
           <button onClick={skip} className="text-ink-soft/70 hover:text-ink-soft">
             Skip the video
           </button>
         )}
-        <a
-          href={searchUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-ink-soft/70 hover:text-ink-soft"
-          onClick={() => track("video_opened_external", { theme })}
-        >
-          Open on YouTube ↗
-        </a>
+        {hasId && (
+          <a
+            href={`https://youtu.be/${video.yt}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-ink-soft/70 hover:text-ink-soft"
+            onClick={() => track("video_opened_external", { theme })}
+          >
+            Open on YouTube ↗
+          </a>
+        )}
       </div>
     </div>
   );
