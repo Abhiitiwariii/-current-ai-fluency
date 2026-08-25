@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { track, getUserId } from "@/lib/analytics";
-import { insertRow } from "@/lib/supabase";
+import { getState } from "@/lib/store";
+import { supabase, isSupabaseConfigured, insertRow } from "@/lib/supabase";
 
 // FeedbackForm (v3.2) — a light "what do you like / what would you change" prompt.
 // Dual-write, best-effort: always logs locally via track() (so it rides the
@@ -12,9 +13,50 @@ export default function FeedbackForm({ onClose }) {
   const [likes, setLikes] = useState("");
   const [dislikes, setDislikes] = useState("");
   const [email, setEmail] = useState("");
+  const [account, setAccount] = useState(null);
   const [sent, setSent] = useState(false);
   const emailValid = /^\S+@\S+\.\S+$/.test(email.trim());
   const hasText = !!(likes.trim() || dislikes.trim());
+  // Show Google only when Supabase is configured and we don't already know an email.
+  const googleEnabled = isSupabaseConfigured() && !account?.email;
+
+  // Pre-fill the email for anyone already signed in (Google or saved), so they
+  // don't have to type it.
+  useEffect(() => {
+    const a = getState().account;
+    setAccount(a);
+    if (a?.email) setEmail(a.email);
+    // Restore a draft left behind before a Google redirect.
+    try {
+      const raw = localStorage.getItem("current.feedback.draft");
+      if (raw) {
+        const d = JSON.parse(raw);
+        if (d.likes) setLikes(d.likes);
+        if (d.dislikes) setDislikes(d.dislikes);
+        localStorage.removeItem("current.feedback.draft");
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  // Persist the typed draft, then send them to Google. On return the form can be
+  // reopened and the email is pre-filled from their account (no typing).
+  function continueWithGoogle() {
+    track("google_signin_started", { surface: "feedback" });
+    try {
+      localStorage.setItem(
+        "current.feedback.draft",
+        JSON.stringify({ likes, dislikes })
+      );
+    } catch {
+      /* storage blocked — draft just won't restore */
+    }
+    supabase?.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: window.location.origin },
+    });
+  }
 
   function submit() {
     if (!emailValid || !hasText) return;
@@ -86,6 +128,23 @@ export default function FeedbackForm({ onClose }) {
                   className="w-full resize-none rounded-xl border border-line bg-surface px-4 py-2.5 text-[15px] text-ink outline-none transition-colors focus:border-electric"
                 />
               </label>
+              {googleEnabled && (
+                <div className="pt-1">
+                  <button
+                    type="button"
+                    onClick={continueWithGoogle}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-line bg-surface px-4 py-3 text-[14px] font-semibold text-ink transition-colors hover:border-electric"
+                  >
+                    <span className="text-[16px]">G</span>
+                    Use my Google email — no typing
+                  </button>
+                  <div className="my-2 flex items-center gap-3 text-[11px] uppercase tracking-wide text-ink-soft/60">
+                    <span className="h-px flex-1 bg-line" />
+                    or enter it
+                    <span className="h-px flex-1 bg-line" />
+                  </div>
+                </div>
+              )}
               <input
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -94,6 +153,11 @@ export default function FeedbackForm({ onClose }) {
                 autoComplete="email"
                 className="w-full rounded-xl border border-line bg-surface px-4 py-3 text-[15px] text-ink outline-none transition-colors focus:border-electric"
               />
+              {account?.email && (
+                <p className="text-[12px] text-ink-soft/70">
+                  Using your saved email — edit it if you like.
+                </p>
+              )}
             </div>
 
             <button
