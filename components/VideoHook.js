@@ -20,9 +20,15 @@ export default function VideoHook({ video, theme, job, onContinue }) {
   const clip =
     (video && video.start != null ? `&start=${video.start}` : "") +
     (video && video.end != null ? `&end=${video.end}` : "");
-  // youtube-nocookie + autoplay once the user chooses to play.
+  // Standard youtube.com embed (nocookie is stricter for fresh uploads). Passing
+  // the page origin + playsinline is what YouTube recommends for embedded players
+  // and avoids "player configuration" errors that the bare /embed/ URL can throw.
+  const origin =
+    typeof window !== "undefined" ? window.location.origin : "";
   const embed = hasId
-    ? `https://www.youtube-nocookie.com/embed/${video.yt}?autoplay=1&rel=0&modestbranding=1${clip}`
+    ? `https://www.youtube.com/embed/${video.yt}?autoplay=1&rel=0&modestbranding=1&playsinline=1${
+        origin ? `&origin=${encodeURIComponent(origin)}` : ""
+      }${clip}`
     : null;
   const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(
     (video && video.search) || "AI for work"
@@ -52,7 +58,7 @@ export default function VideoHook({ video, theme, job, onContinue }) {
               className="absolute inset-0 h-full w-full"
               src={embed}
               title={video?.title || "Video"}
-              allow="accelerator; autoplay; encrypted-media; picture-in-picture"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
             />
           ) : (
