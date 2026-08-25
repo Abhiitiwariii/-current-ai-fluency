@@ -9,24 +9,34 @@ import { supabase, isSupabaseConfigured, insertRow } from "@/lib/supabase";
 // Dual-write, best-effort: always logs locally via track() (so it rides the
 // existing Metrics JSON/CSV export), and additionally inserts to Supabase when
 // configured. Failures are swallowed — the user always sees a thank-you.
-export default function FeedbackForm({ onClose }) {
+export default function FeedbackForm({ onClose, defaultEmail = "" }) {
   const [likes, setLikes] = useState("");
   const [dislikes, setDislikes] = useState("");
   const [email, setEmail] = useState("");
-  const [account, setAccount] = useState(null);
+  const [knownEmail, setKnownEmail] = useState(defaultEmail || "");
   const [sent, setSent] = useState(false);
   const emailValid = /^\S+@\S+\.\S+$/.test(email.trim());
   const hasText = !!(likes.trim() || dislikes.trim());
   // Show Google only when Supabase is configured and we don't already know an email.
-  const googleEnabled = isSupabaseConfigured() && !account?.email;
+  const googleEnabled = isSupabaseConfigured() && !knownEmail;
 
-  // Pre-fill the email for anyone already signed in (Google or saved), so they
-  // don't have to type it.
+  // A Google email can arrive late (session hydrates after the OAuth return); when
+  // it does, pre-fill so the user never types it.
+  useEffect(() => {
+    if (defaultEmail) {
+      setKnownEmail(defaultEmail);
+      setEmail((cur) => cur || defaultEmail);
+    }
+  }, [defaultEmail]);
+
+  // On mount: fall back to any saved account email + restore a draft left behind
+  // before a Google redirect.
   useEffect(() => {
     const a = getState().account;
-    setAccount(a);
-    if (a?.email) setEmail(a.email);
-    // Restore a draft left behind before a Google redirect.
+    if (a?.email) {
+      setKnownEmail((cur) => cur || a.email);
+      setEmail((cur) => cur || a.email);
+    }
     try {
       const raw = localStorage.getItem("current.feedback.draft");
       if (raw) {
@@ -49,6 +59,8 @@ export default function FeedbackForm({ onClose }) {
         "current.feedback.draft",
         JSON.stringify({ likes, dislikes })
       );
+      // Flag so the app auto-reopens this form on return from Google.
+      localStorage.setItem("current.feedback.pending", "1");
     } catch {
       /* storage blocked — draft just won't restore */
     }
@@ -153,7 +165,7 @@ export default function FeedbackForm({ onClose }) {
                 autoComplete="email"
                 className="w-full rounded-xl border border-line bg-surface px-4 py-3 text-[15px] text-ink outline-none transition-colors focus:border-electric"
               />
-              {account?.email && (
+              {knownEmail && (
                 <p className="text-[12px] text-ink-soft/70">
                   Using your saved email — edit it if you like.
                 </p>

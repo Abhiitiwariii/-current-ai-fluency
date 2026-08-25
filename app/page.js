@@ -25,11 +25,23 @@ export default function Page() {
   const [state, setState] = useState(null);
   const [view, setView] = useState("home"); // home | drop | drop-reps | audio | metrics | certificate
   const [dropTier, setDropTier] = useState(0); // which capability tier this session runs
+  const [openFeedbackOnMount, setOpenFeedbackOnMount] = useState(false);
 
   useEffect(() => {
     setState(getState());
     markVisit(); // §20: log day2_return if this is a genuine later-day return
     setMounted(true);
+
+    // v3.2: returning from a Google sign-in that was started inside the feedback
+    // form → auto-reopen it (draft + email restored) so nothing feels lost.
+    try {
+      if (localStorage.getItem("current.feedback.pending")) {
+        localStorage.removeItem("current.feedback.pending");
+        setOpenFeedbackOnMount(true);
+      }
+    } catch {
+      /* ignore */
+    }
 
     // v3.2: hydrate a Google (Supabase Auth) session on mount — including the
     // return from the OAuth redirect, where supabase-js parses the URL for us.
@@ -135,6 +147,7 @@ export default function Page() {
   return (
     <Home
       state={state}
+      openFeedbackOnMount={openFeedbackOnMount}
       onStartDrop={(tier) => {
         setDropTier(tier == null ? currentTier() : tier);
         setView("drop");

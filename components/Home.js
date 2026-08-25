@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { jobLabel, getDrop, TRACK_LENGTH } from "@/lib/content";
 import { coverFor, textureBackground } from "@/lib/cover";
 import { track } from "@/lib/analytics";
@@ -14,6 +14,7 @@ import AccountPrompt from "./AccountPrompt";
 // are cleared, the AI-Fluency certificate is claimable here.
 export default function Home({
   state,
+  openFeedbackOnMount,
   onStartDrop,
   onStartAudio,
   onResumeRep,
@@ -24,6 +25,11 @@ export default function Home({
 }) {
   const [showFeedback, setShowFeedback] = useState(false);
   const [showSave, setShowSave] = useState(false);
+
+  // Auto-reopen feedback after returning from a Google sign-in started in the form.
+  useEffect(() => {
+    if (openFeedbackOnMount) setShowFeedback(true);
+  }, [openFeedbackOnMount]);
   const [savedLocally, setSavedLocally] = useState(false);
   const hasAccount = !!state.account || savedLocally;
   const isGoogle = state.account?.provider === "google";
@@ -259,6 +265,7 @@ export default function Home({
 
       {showFeedback && (
         <FeedbackForm
+          defaultEmail={state.account?.email || ""}
           onClose={() => {
             track("feedback_dismissed");
             setShowFeedback(false);
