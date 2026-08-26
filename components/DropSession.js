@@ -42,6 +42,7 @@ export default function DropSession({ onExit, onDone, onCertificate, mode = "ful
   const [repIndex, setRepIndex] = useState(0);
   const [result, setResult] = useState(null); // grading result for current rep
   const [summary, setSummary] = useState(null); // completion summary
+  const [coachHeight, setCoachHeight] = useState(0); // measured CoachFooter height, so content clears the fixed bar
 
   // §17 card_id — reps may not carry an explicit id; derive a stable one.
   function cardId(i) {
@@ -116,7 +117,13 @@ export default function DropSession({ onExit, onDone, onCertificate, mode = "ful
 
   return (
     <main className="min-h-screen bg-paper">
-      <div className="mx-auto max-w-xl px-6 pb-40 pt-6">
+      <div
+        className="mx-auto max-w-xl px-6 pb-40 pt-6"
+        // Reserve exactly the coaching bar's height (plus a gap) so its longer
+        // "Almost — here's the tweak" state never overlaps the lower options.
+        // Falls back to the pb-40 class until the bar reports a height.
+        style={coachHeight ? { paddingBottom: coachHeight + 24 } : undefined}
+      >
         {phase !== "done" && (
           <div className="mb-8">
             <ProgressBar value={progressValue} total={steps} onExit={handleExit} />
@@ -160,7 +167,11 @@ export default function DropSession({ onExit, onDone, onCertificate, mode = "ful
       </div>
 
       {phase === "rep" && (
-        <CoachFooter result={result} onContinue={handleContinue} />
+        <CoachFooter
+          result={result}
+          onContinue={handleContinue}
+          onHeight={setCoachHeight}
+        />
       )}
     </main>
   );
