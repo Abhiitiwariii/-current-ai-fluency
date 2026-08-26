@@ -38,6 +38,14 @@ centralises it.
 - The "Share on WhatsApp" button now sends a warm **peer-invite** via new `inviteMessage()` ("…you
   should try it too 🙂" + link) instead of the achievement-card copy. wa.me still lets the sender
   pick the recipient (WhatsApp doesn't allow auto-send/auto-recipient — expected).
+- **VERIFIED in a real browser (chrome-devtools):** navigating the generated `wa.me/?text=` URL lands
+  on WhatsApp's "Share on WhatsApp" page (message preview + "Open app" / "Continue to WhatsApp Web");
+  a trusted click on the exact `openWhatsApp` mechanism opened a real WhatsApp tab (`openedTruthy:
+  true`, no error). Deployed bundle confirmed to carry the invite copy + clean `window.open` (the one
+  `noopener` left in the bundle is VideoHook's YouTube link, not this). User confirmed working live.
+- **Known cosmetic nit (not yet fixed):** the 🙂 emoji is mangled to `�` by wa.me's redirect
+  (`%F0%9F%99%82` → `%EF%BF%BD`). One-line fix available: drop the emoji from `inviteMessage()`, or
+  point `waLink` straight at `https://api.whatsapp.com/send?text=` to skip the corrupting redirect.
 
 **Commits:** `3b45c25` (Mixpanel events) · `11bf791` (Mixpanel People profiles) · `772d727`
 (WhatsApp share). Added dep: `mixpanel-browser`. Untracked (not committed): the new
