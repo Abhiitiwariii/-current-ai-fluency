@@ -43,9 +43,11 @@ centralises it.
   a trusted click on the exact `openWhatsApp` mechanism opened a real WhatsApp tab (`openedTruthy:
   true`, no error). Deployed bundle confirmed to carry the invite copy + clean `window.open` (the one
   `noopener` left in the bundle is VideoHook's YouTube link, not this). User confirmed working live.
-- **Known cosmetic nit (not yet fixed):** the 🙂 emoji is mangled to `�` by wa.me's redirect
-  (`%F0%9F%99%82` → `%EF%BF%BD`). One-line fix available: drop the emoji from `inviteMessage()`, or
-  point `waLink` straight at `https://api.whatsapp.com/send?text=` to skip the corrupting redirect.
+- **Emoji corruption FIXED (`533e98e`):** `waLink` now points at `https://api.whatsapp.com/send?text=`
+  instead of the `wa.me` shortlink. Verified in-browser that wa.me's redirect mangled 🙂 to `%EF%BF%BD`
+  in the forwarded message while api.whatsapp.com preserves `%F0%9F%99%82` into the chat. (The `�` still
+  shown on WhatsApp's *intermediate* landing page is that page's own rendering, not the sent message —
+  the forward link to web.whatsapp.com carries the correct bytes.)
 
 **Commits:** `3b45c25` (Mixpanel events) · `11bf791` (Mixpanel People profiles) · `772d727`
 (WhatsApp share). Added dep: `mixpanel-browser`. Untracked (not committed): the new
