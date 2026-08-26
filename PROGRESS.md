@@ -2,6 +2,49 @@
 
 _Last saved: 2026-08-26 · pick up in a fresh session anytime._
 
+## 📊 LIVE (2026-08-26 · pm) — Mixpanel analytics + WhatsApp share fix · latest commit `772d727`
+Built (`npm run build` exits 0), pushed to `main`, auto-deployed, and verified live (Mixpanel token
+inlined in the prod bundle `page-*.js`; ingestion confirmed with a `status:1` test event).
+
+**Why:** localStorage-only analytics meant each visitor's funnel was trapped in their own browser —
+no way to see cross-user drop-off ("not many people opening; where do they drop?"). Mixpanel
+centralises it.
+
+**Mixpanel integration (gated, opt-in — same pattern as `lib/supabase.js`):**
+- New `lib/mixpanel.js` — dynamic-imported, no-op unless `NEXT_PUBLIC_MIXPANEL_TOKEN` is set, so it
+  never runs during SSR/build and costs nothing when unconfigured. localStorage stays the source of
+  truth (survives ad-blockers that drop Mixpanel's API).
+- Hooked into the single `analytics.track()` chokepoint → **every** funnel event + `rep_abandoned` +
+  feedback events mirror to Mixpanel automatically, tagged with the existing persistent anon
+  `user_id` (`identify`) and persona as a super-property (registered on `job_selected`).
+- **Named users:** `mpSetPerson({$name,$email})` writes a Mixpanel **People profile** at each
+  identity-capture point — Google sign-in (`app/page.js`), "Save my progress" (`AccountPrompt.js`),
+  and feedback-with-email (`FeedbackForm.js`) — so the Users view shows real names/emails, not just
+  the anon id. (Anonymous browsers still only show the anon id — expected; that gap IS the drop-off
+  signal.)
+- Token `87a9161d…` (public write-only) set in `.env.local` **and** all 3 Vercel envs
+  (Production/Preview/Development, Non-sensitive — required for `NEXT_PUBLIC_` vars). Vercel project:
+  `abhilash12/current-ai-fluency`. US data residency (SDK default — no `api_host` override needed).
+- `.env.example` documents the var; `.gitignore` now also ignores `.vercel` + all `.env*`.
+- **To read drop-off:** Mixpanel → Funnels, steps `onboarding_started → job_selected →
+  video_started → awe_card_viewed → rep_started → rep_completed → account_created`; break down by
+  `job`; analyse `rep_abandoned` by `card_id` for the exact quit card (§16). NOTE: low opens is a
+  *distribution* problem (check `onboarding_started` vs links sent), not fixable in-funnel.
+
+**WhatsApp share fix (`lib/whatsapp.js` + `ShareCard.js`):**
+- `openWhatsApp` dropped the `"noopener,noreferrer"` window.open feature string that made browsers
+  treat it as a blockable popup and return `null` (blocked opens failed silently = "not working").
+  Now opens a clean tab, severs `opener` manually, and falls back to same-tab nav if blocked.
+- The "Share on WhatsApp" button now sends a warm **peer-invite** via new `inviteMessage()` ("…you
+  should try it too 🙂" + link) instead of the achievement-card copy. wa.me still lets the sender
+  pick the recipient (WhatsApp doesn't allow auto-send/auto-recipient — expected).
+
+**Commits:** `3b45c25` (Mixpanel events) · `11bf791` (Mixpanel People profiles) · `772d727`
+(WhatsApp share). Added dep: `mixpanel-browser`. Untracked (not committed): the new
+`research/outputs/PRD-full-2026-08-26.md`.
+
+---
+
 ## 🚀 LIVE (2026-08-26) — deployed & fully configured · latest commit `c50247b`
 **https://current-ai-fluency.vercel.app** — auto-deploys on push to `main` (GitHub → Vercel).
 Everything below is built (`npm run build` exits 0), pushed, and verified live via curl (HTTP 200,
