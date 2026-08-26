@@ -51,10 +51,10 @@ centralises it.
 
 **Feedback → WhatsApp: ADDED then REMOVED to protect the number (`a3a5bf8` → `ade8ecb`):**
 - A "Send on WhatsApp" feedback button was added (`a3a5bf8`) that addressed the founder's personal
-  number (`REDACTED`) via `api.whatsapp.com/send?phone=…`. **Removed in `ade8ecb`** because any
+  number (redacted) via `api.whatsapp.com/send?phone=…`. **Removed in `ade8ecb`** because any
   number in a client-side WhatsApp link is visible in the page source — it was briefly public in the
-  live bundle (~30 min) and remains in git history at `a3a5bf8`. Verified the number is now GONE from
-  the live bundle (chunk `page-d479cf9a…`).
+  live bundle (~30 min). Git history was later scrubbed of the number (filter-repo + force-push).
+  Verified the number is GONE from the live bundle (chunk `page-d479cf9a…`).
 - **Feedback capture is unaffected:** the in-app Send still writes to Supabase `feedback`/`signups` +
   local funnel + Mixpanel (`feedback_submitted`). Read real feedback from the Supabase Table Editor.
 - **To re-add a WhatsApp feedback channel:** use a DEDICATED / WhatsApp Business number (never a
