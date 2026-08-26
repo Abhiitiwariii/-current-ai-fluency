@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { achievementFor } from "@/lib/content";
 import { track } from "@/lib/analytics";
-import { openWhatsApp } from "@/lib/whatsapp";
+import { openWhatsApp, inviteMessage } from "@/lib/whatsapp";
 
 // Growth-loop stub (§18): completion produces a status-flattering, shareable
 // achievement. The visual is the cinematic "awe" register (dark, electric) —
@@ -33,7 +33,9 @@ export default function ShareCard({ capabilityId, job }) {
 
   function shareWhatsApp() {
     track("achievement_shared", { capability: capabilityId, method: "whatsapp" });
-    openWhatsApp(shareText);
+    // Send the warm peer-invite (not the achievement card copy) — a friend gets
+    // "you should try this too" + the link.
+    openWhatsApp(inviteMessage(link));
   }
 
   function copy(method = "copy") {
