@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { track, getUserId } from "@/lib/analytics";
 import { mpSetPerson } from "@/lib/mixpanel";
+import { sendFeedbackOnWhatsApp } from "@/lib/whatsapp";
 import { getState } from "@/lib/store";
 import { supabase, isSupabaseConfigured, insertRow } from "@/lib/supabase";
 
@@ -71,15 +72,14 @@ export default function FeedbackForm({ onClose, defaultEmail = "" }) {
     });
   }
 
-  function submit() {
-    if (!emailValid || !hasText) return;
-    const l = likes.trim();
-    const d = dislikes.trim();
-    const e = email.trim();
+  // Log the feedback everywhere (local funnel + Supabase + Mixpanel). Shared by
+  // both the in-app Send and the "Send on WhatsApp" paths, tagged by `channel`.
+  function persist(l, d, e, channel) {
     track("feedback_submitted", {
       has_likes: !!l,
       has_dislikes: !!d,
       has_email: !!e,
+      channel,
     });
     // Best-effort Supabase capture (no-op if unconfigured).
     insertRow("feedback", {
@@ -91,6 +91,26 @@ export default function FeedbackForm({ onClose, defaultEmail = "" }) {
     if (e) insertRow("signups", { email: e, source: "feedback" });
     // Attach the email to the Mixpanel profile (Users view).
     if (e) mpSetPerson({ email: e, method: "feedback" });
+  }
+
+  // In-app send: requires a valid email (the acquisition step) + some text.
+  function submit() {
+    if (!emailValid || !hasText) return;
+    persist(likes.trim(), dislikes.trim(), email.trim(), "in_app");
+    setSent(true);
+    setTimeout(() => onClose?.(), 1100);
+  }
+
+  // WhatsApp send: only needs some text (email optional — WhatsApp already
+  // identifies them by their chat). Logs the same, then opens WhatsApp addressed
+  // to the founder with the feedback pre-filled.
+  function submitWhatsApp() {
+    if (!hasText) return;
+    const l = likes.trim();
+    const d = dislikes.trim();
+    const e = emailValid ? email.trim() : "";
+    persist(l, d, e, "whatsapp");
+    sendFeedbackOnWhatsApp({ likes: l, dislikes: d, email: e });
     setSent(true);
     setTimeout(() => onClose?.(), 1100);
   }
@@ -187,6 +207,17 @@ export default function FeedbackForm({ onClose, defaultEmail = "" }) {
                 Enter a valid email so we can follow up.
               </p>
             )}
+            <button
+              onClick={submitWhatsApp}
+              disabled={!hasText}
+              className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-line bg-surface px-4 py-3 text-[14px] font-semibold text-ink transition-colors hover:border-electric disabled:opacity-50"
+            >
+              <span aria-hidden className="text-[16px]">💬</span>
+              Send on WhatsApp
+            </button>
+            <p className="mt-1.5 text-center text-[12px] text-ink-soft/70">
+              Prefer WhatsApp? Send it straight to us — email optional.
+            </p>
             <button
               onClick={onClose}
               className="mt-2 w-full text-center text-[12px] text-ink-soft/70 hover:text-ink-soft"
