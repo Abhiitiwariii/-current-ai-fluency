@@ -10,6 +10,7 @@ import {
 } from "@/lib/store";
 import { TRACK_LENGTH } from "@/lib/content";
 import { markVisit, track } from "@/lib/analytics";
+import { mpSetPerson } from "@/lib/mixpanel";
 import { supabase, insertRow } from "@/lib/supabase";
 import Onboarding from "@/components/Onboarding";
 import Home from "@/components/Home";
@@ -53,6 +54,8 @@ export default function Page() {
         if (user && !getState().account) {
           const account = createAccountFromGoogle(user);
           track("account_created", { has_email: !!user.email, method: "google" });
+          // Put the real name/email on the Mixpanel profile (Users view).
+          mpSetPerson({ name: account?.name, email: account?.email, method: "google" });
           // Unified signup capture: every save-progress path lands in `signups`,
           // so there's one queryable list (auth.users still holds the login).
           if (account?.email) {

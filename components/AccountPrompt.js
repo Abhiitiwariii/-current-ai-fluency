@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createAccount } from "@/lib/store";
 import { track } from "@/lib/analytics";
+import { mpSetPerson } from "@/lib/mixpanel";
 import { supabase, isSupabaseConfigured, insertRow } from "@/lib/supabase";
 
 // §10: account creation AFTER the aha — "this respects my time" first, signup
@@ -22,6 +23,8 @@ export default function AccountPrompt({ streak, onDone }) {
     const trimmedEmail = email.trim();
     createAccount({ name, email });
     track("account_created", { has_email: !!trimmedEmail, method: "local" });
+    // Put the real name/email on the Mixpanel profile (Users view).
+    mpSetPerson({ name: name.trim() || undefined, email: trimmedEmail, method: "local" });
     // v3.2: capture a typed email into Supabase too (best-effort, no-op if unconfigured).
     if (trimmedEmail) {
       insertRow("signups", {

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { track, getUserId } from "@/lib/analytics";
+import { mpSetPerson } from "@/lib/mixpanel";
 import { getState } from "@/lib/store";
 import { supabase, isSupabaseConfigured, insertRow } from "@/lib/supabase";
 
@@ -88,6 +89,8 @@ export default function FeedbackForm({ onClose, defaultEmail = "" }) {
       email: e || null,
     });
     if (e) insertRow("signups", { email: e, source: "feedback" });
+    // Attach the email to the Mixpanel profile (Users view).
+    if (e) mpSetPerson({ email: e, method: "feedback" });
     setSent(true);
     setTimeout(() => onClose?.(), 1100);
   }
