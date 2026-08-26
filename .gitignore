@@ -39,3 +39,6 @@ __pycache__/
 video/node_modules/
 video/out/
 video/public/ambient.wav
+
+.vercel
+.env*
