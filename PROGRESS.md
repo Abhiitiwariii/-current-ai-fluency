@@ -49,20 +49,28 @@ centralises it.
   shown on WhatsApp's *intermediate* landing page is that page's own rendering, not the sent message —
   the forward link to web.whatsapp.com carries the correct bytes.)
 
-**Feedback → WhatsApp (`a3a5bf8`, `FeedbackForm.js` + `lib/whatsapp.js`):**
-- New **"Send on WhatsApp"** button in the feedback form, alongside the existing in-app Send (both
-  kept). Composes likes/dislikes (+email if given) into a message addressed to the founder's number
-  (`FEEDBACK_WA_NUMBER = REDACTED`, i.e. REDACTED) via `api.whatsapp.com/send?phone=…`,
-  so feedback lands directly in a real WhatsApp chat. Only requires some text (email optional —
-  WhatsApp identifies the sender by their chat). Verified in-browser: forward link targets the number
-  with the 📝 emoji intact.
-- Both paths call a shared `persist()` → same local `feedback_submitted` + Supabase `feedback`/
-  `signups` + Mixpanel, now tagged with `channel: "in_app" | "whatsapp"`. To change the destination
-  number later, edit `FEEDBACK_WA_NUMBER` in `lib/whatsapp.js`.
+**Feedback → WhatsApp: ADDED then REMOVED to protect the number (`a3a5bf8` → `ade8ecb`):**
+- A "Send on WhatsApp" feedback button was added (`a3a5bf8`) that addressed the founder's personal
+  number (`REDACTED`) via `api.whatsapp.com/send?phone=…`. **Removed in `ade8ecb`** because any
+  number in a client-side WhatsApp link is visible in the page source — it was briefly public in the
+  live bundle (~30 min) and remains in git history at `a3a5bf8`. Verified the number is now GONE from
+  the live bundle (chunk `page-d479cf9a…`).
+- **Feedback capture is unaffected:** the in-app Send still writes to Supabase `feedback`/`signups` +
+  local funnel + Mixpanel (`feedback_submitted`). Read real feedback from the Supabase Table Editor.
+- **To re-add a WhatsApp feedback channel:** use a DEDICATED / WhatsApp Business number (never a
+  personal one — it will be public in the bundle). A client-side link can't hide its number; only a
+  server-side WhatsApp Business API send could, which is out of MVP scope.
+- The no-number **share-invite** (`wa.me`→`api.whatsapp.com/send?text=`, ShareCard) is unaffected —
+  it exposes no number.
+
+**Analytics note:** WhatsApp *share* still fires `achievement_shared {method:"whatsapp"}` → Mixpanel.
+All events flow via the single `analytics.track()` chokepoint, so they're already in Mixpanel; break
+down by event props (e.g. `method`) in Insights.
 
 **Commits:** `3b45c25` (Mixpanel events) · `11bf791` (Mixpanel People profiles) · `772d727`
-(WhatsApp share) · `533e98e` (emoji fix) · `a3a5bf8` (feedback→WhatsApp). Added dep:
-`mixpanel-browser`. Untracked (not committed): the new `research/outputs/PRD-full-2026-08-26.md`.
+(WhatsApp share) · `533e98e` (emoji fix) · `a3a5bf8` (feedback→WhatsApp, later reverted) · `ade8ecb`
+(remove WhatsApp feedback number). Added dep: `mixpanel-browser`. Untracked (not committed): the new
+`research/outputs/PRD-full-2026-08-26.md`.
 
 ---
 
