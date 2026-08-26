@@ -49,9 +49,20 @@ centralises it.
   shown on WhatsApp's *intermediate* landing page is that page's own rendering, not the sent message —
   the forward link to web.whatsapp.com carries the correct bytes.)
 
+**Feedback → WhatsApp (`a3a5bf8`, `FeedbackForm.js` + `lib/whatsapp.js`):**
+- New **"Send on WhatsApp"** button in the feedback form, alongside the existing in-app Send (both
+  kept). Composes likes/dislikes (+email if given) into a message addressed to the founder's number
+  (`FEEDBACK_WA_NUMBER = REDACTED`, i.e. REDACTED) via `api.whatsapp.com/send?phone=…`,
+  so feedback lands directly in a real WhatsApp chat. Only requires some text (email optional —
+  WhatsApp identifies the sender by their chat). Verified in-browser: forward link targets the number
+  with the 📝 emoji intact.
+- Both paths call a shared `persist()` → same local `feedback_submitted` + Supabase `feedback`/
+  `signups` + Mixpanel, now tagged with `channel: "in_app" | "whatsapp"`. To change the destination
+  number later, edit `FEEDBACK_WA_NUMBER` in `lib/whatsapp.js`.
+
 **Commits:** `3b45c25` (Mixpanel events) · `11bf791` (Mixpanel People profiles) · `772d727`
-(WhatsApp share). Added dep: `mixpanel-browser`. Untracked (not committed): the new
-`research/outputs/PRD-full-2026-08-26.md`.
+(WhatsApp share) · `533e98e` (emoji fix) · `a3a5bf8` (feedback→WhatsApp). Added dep:
+`mixpanel-browser`. Untracked (not committed): the new `research/outputs/PRD-full-2026-08-26.md`.
 
 ---
 
